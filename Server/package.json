@@ -1,5 +1,5 @@
 {
-  "name": "to-be-frank-server",
+  "name": "blogSite-server",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
@@ -15,7 +15,7 @@
     "@apollo/server": "^4.7.1",
     "bcrypt": "^5.0.0",
     "express": "^4.17.2",
-    "graphql": "^16.6.0",
+    "graphql": "^16.8.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^7.0.2"
   },
