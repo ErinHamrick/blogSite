@@ -13,24 +13,49 @@ const resolvers = {
 	Query: {
 		getUser: async (_, { userId }) => {
 			try {
-				return await User.findById(userId);
+			  const user = await User.findById(userId);
+			  if (!user) {
+				throw new Error('User not found');
+			  }
+	  
+			  // Fetch all blog posts associated with the user
+			  const blogPosts = await BlogPost.find({ author: userId });
+	  
+			  // Return the user along with their blog posts
+			  return {
+				_id: user._id,
+				username: user.username,
+				email: user.email,
+				blogPosts,
+			  };
 			} catch (error) {
-				console.error('Error fetching user:', error);
-				throw new Error(`Error fetching user: ${error.message}`);
+			  console.error('Error fetching user:', error);
+			  throw new Error(`Error fetching user: ${error.message}`);
 			}
-		},
-		getAllUsers: async () => {
+		  },
+		  getAllUsers: async () => {
 			try {
-				const users = await User.find();
-				if (users.some((user) => user.username == null)) {
-					console.error('Error: Some users have null usernames');
-				}
-				return users;
+			  const users = await User.find();
+	  
+			  // Fetch all blog posts associated with each user
+			  const usersWithBlogPosts = await Promise.all(
+				users.map(async (user) => {
+				  const blogPosts = await BlogPost.find({ author: user._id });
+				  return {
+					_id: user._id,
+					username: user.username,
+					email: user.email,
+					blogPosts,
+				  };
+				})
+			  );
+	  
+			  return usersWithBlogPosts;
 			} catch (error) {
-				console.error('Error fetching users:', error);
-				throw new Error(`Error fetching users: ${error.message}`);
+			  console.error('Error fetching users:', error);
+			  throw new Error(`Error fetching users: ${error.message}`);
 			}
-		},
+		  },	  
 		getBlogPost: async (_, { postId }) => {
 			return await BlogPost.findById(postId)
 				.populate('author')
@@ -48,15 +73,28 @@ const resolvers = {
 		},
 		me: async (_, args, context) => {
 			try {
-				if (context.user) {
-					return await User.findOne({ _id: context.user._id });
+			  if (context.user) {
+				const user = await User.findOne({ _id: context.user._id });
+				if (!user) {
+				  throw new AuthenticationError('User not found');
 				}
-				throw new AuthenticationError('User not authenticated');
+	  
+				// Fetch blog posts associated with the authenticated user
+				const blogPosts = await BlogPost.find({ author: context.user._id });
+	  
+				return {
+				  _id: user._id,
+				  username: user.username,
+				  email: user.email,
+				  blogPosts,
+				};
+			  }
+			  throw new AuthenticationError('User not authenticated');
 			} catch (error) {
-				console.error(error);
-				throw new Error('Failed to fetch user');
+			  console.error(error);
+			  throw new Error('Failed to fetch user');
 			}
-		},
+		  },
 	},
 	Mutation: {
 		login: async (_, { username, password }) => {

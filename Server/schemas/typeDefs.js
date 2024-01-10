@@ -8,6 +8,7 @@ const typeDefs = `
     _id: ID!
     username: String!
     email: String!
+    blogPosts: [BlogPost]!
   }
 
   type BlogPost {
