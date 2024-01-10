@@ -8,6 +8,7 @@ const db = require('./config/connection');
 const PORT = process.env.PORT || 3001;
 const app = express();
 
+
 console.log('Resolvers Path:', path.resolve(__dirname, './schemas/resolvers.js'));
 
 
@@ -15,6 +16,7 @@ console.log('Resolvers Path:', path.resolve(__dirname, './schemas/resolvers.js')
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  context: authMiddleware,
 });
 
 // Create a new instance of an Apollo server with the GraphQL schema
@@ -24,9 +26,7 @@ const startApolloServer = async () => {
   app.use(express.urlencoded({ extended: false }));
   app.use(express.json());
 
-  app.use('/graphql', expressMiddleware(server, {
-    context: authMiddleware
-  }));
+  app.use('/graphql', expressMiddleware(server));
 
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/dist')));
