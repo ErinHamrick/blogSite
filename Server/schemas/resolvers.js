@@ -12,24 +12,49 @@ const resolvers = {
 	Query: {
 		getUser: async (_, { userId }) => {
 			try {
-				return await User.findById(userId);
+			  const user = await User.findById(userId);
+			  if (!user) {
+				throw new Error('User not found');
+			  }
+	  
+			  // Fetch all blog posts associated with the user
+			  const blogPosts = await BlogPost.find({ author: userId });
+	  
+			  // Return the user along with their blog posts
+			  return {
+				_id: user._id,
+				username: user.username,
+				email: user.email,
+				blogPosts,
+			  };
 			} catch (error) {
-				console.error('Error fetching user:', error);
-				throw new Error(`Error fetching user: ${error.message}`);
+			  console.error('Error fetching user:', error);
+			  throw new Error(`Error fetching user: ${error.message}`);
 			}
-		},
-		getAllUsers: async () => {
+		  },
+		  getAllUsers: async () => {
 			try {
-				const users = await User.find();
-				if (users.some((user) => user.username == null)) {
-					console.error('Error: Some users have null usernames');
-				}
-				return users;
+			  const users = await User.find();
+	  
+			  // Fetch all blog posts associated with each user
+			  const usersWithBlogPosts = await Promise.all(
+				users.map(async (user) => {
+				  const blogPosts = await BlogPost.find({ author: user._id });
+				  return {
+					_id: user._id,
+					username: user.username,
+					email: user.email,
+					blogPosts,
+				  };
+				})
+			  );
+	  
+			  return usersWithBlogPosts;
 			} catch (error) {
-				console.error('Error fetching users:', error);
-				throw new Error(`Error fetching users: ${error.message}`);
+			  console.error('Error fetching users:', error);
+			  throw new Error(`Error fetching users: ${error.message}`);
 			}
-		},
+		  },	  
 		getBlogPost: async (_, { postId }) => {
 			return await BlogPost.findById(postId)
 				.populate('author')
@@ -47,15 +72,28 @@ const resolvers = {
 		},
 		me: async (_, args, context) => {
 			try {
-				if (context.user) {
-					return await User.findOne({ _id: context.user._id });
+			  if (context.user) {
+				const user = await User.findOne({ _id: context.user._id });
+				if (!user) {
+				  throw new AuthenticationError('User not found');
 				}
-				throw new AuthenticationError('User not authenticated');
+	  
+				// Fetch blog posts associated with the authenticated user
+				const blogPosts = await BlogPost.find({ author: context.user._id });
+	  
+				return {
+				  _id: user._id,
+				  username: user.username,
+				  email: user.email,
+				  blogPosts,
+				};
+			  }
+			  throw new AuthenticationError('User not authenticated');
 			} catch (error) {
-				console.error(error);
-				throw new Error('Failed to fetch user');
+			  console.error(error);
+			  throw new Error('Failed to fetch user');
 			}
-		},
+		  },
 	},
 	Mutation: {
 		login: async (_, { username, password }) => {
@@ -187,187 +225,3 @@ const resolvers = {
 };
 
 module.exports = resolvers;
-
-// const { BlogPost, Comment, User } = require('../models');
-// const {signToken, AuthenticationError} = require('../utils/auth')
-// const dayjs = require('dayjs');
-// const { secret, expiration } = require('../utils/auth');
-// const jwt = require('jsonwebtoken');
-// const { GraphQLError } = require("graphql");
-// const { ApolloServerErrorCode } = require("@apollo/server/errors");
-// // const bcrypt = require('bcrypt');
-
-// const resolvers = {
-// 	Query: {
-// 		getUser: async (_, { userId }) => {
-// 			return await User.findById(userId);
-// 		},
-// 		getAllUsers: async () => {
-// 			try {
-// 				const users = await User.find();
-
-// 				// Log the users' data
-// 				// console.log('Users:', users);
-
-// 				// Check if any user has a null username
-// 				if (users.some((user) => user.username == null)) {
-// 					console.error('Error: Some users have null usernames');
-// 				}
-
-// 				return users;
-// 			} catch (error) {
-// 				console.error('Error fetching users:', error);
-// 				throw new Error(`Error fetching users: ${error.message}`);
-// 			}
-// 		},
-// 		getBlogPost: async (_, { postId }) => {
-// 			return await BlogPost.findById(postId)
-// 				.populate('author')
-// 				.populate('comments')
-// 				.select('_id title content author comments createdAt');
-// 		},
-// 		getAllPosts: async () => {
-// 			try {
-// 				const allPosts = await BlogPost.find();
-// 				return allPosts;
-// 			} catch (error) {
-// 				console.error('Error fetching all posts:', error);
-// 				throw new Error(`Error fetching all posts: ${error.message}`);
-// 			}
-// 		},
-// 	},
-// 	Mutation: {
-// 		createUser: async (_, { username, email, password }) => {
-// 			try {
-// 				const newUser = new User({ username, email, password });
-// 				return await newUser.save();
-// 			} catch (error) {
-// 				throw new Error(`Error creating user: ${error.message}`);
-// 			}
-// 		},
-// 		login: async (_, { username, password }) => {
-// 			try {
-// 				// Find the user by username
-// 				const user = await User.findOne({ username });
-
-// 				if (!user) {
-// 					throw new AuthenticationError('User not found');
-// 				}
-
-// 				// Validate the password using bcrypt
-// 				const isCorrectPassword = await user.isCorrectPassword(password);
-
-// 				if (!isCorrectPassword) {
-// 					throw new AuthenticationError('Invalid password');
-// 				}
-
-// 				// Generate a token using the imported secret and expiration values
-// 				const token = jwt.sign(
-// 					{ userId: user._id, username: user.username },
-// 					secret,
-// 					{ expiresIn: expiration }
-// 				);
-
-// 				// Return the token in the response
-// 				return { token };
-// 			} catch (error) {
-// 				throw new Error(`Error during login: ${error.message}`);
-// 			}
-// 		},
-
-// 		createBlogPost: async (_, { title, content, username }, context) => {
-// 			try {
-// 				// Find the user by username
-// 				const user = await User.findOne({ username });
-
-// 				if (!user) {
-// 					throw new Error('User not found');
-// 				}
-
-// 				// Use the user's ID as the author of the blog post
-// 				const newBlogPost = new BlogPost({
-// 					title,
-// 					content,
-// 					author: user._id,
-// 					createdAt: dayjs().format(),
-// 				});
-// 				const savedBlogPost = await newBlogPost.save();
-// 				return savedBlogPost;
-// 			} catch (error) {
-// 				throw new Error(`Error creating blog post: ${error.message}`);
-// 			}
-// 		},
-// 		createComment: async (_, { postId, content }, context) => {
-// 			// Assume you have a user ID available in the context (e.g., from authentication)
-
-// 			const userId = context.userId; // Adjust based on your actual authentication method
-// 			console.log('Context User ID:', context.user);
-// 			const newComment = new Comment({
-// 				content,
-// 				user: userId,
-// 				blogPost: postId,
-// 			});
-// 			return await newComment.save();
-// 		},
-// 		// Add other mutation resolvers as needed
-// 		deleteUser: async (_, { userId }) => {
-// 			try {
-// 				// Find the user by userId and delete it
-// 				const deletedUser = await User.findByIdAndDelete(userId);
-
-// 				// Check if the user was found and deleted
-// 				if (!deletedUser) {
-// 					return {
-// 						success: false,
-// 						message: 'User not found or already deleted',
-// 					};
-// 				}
-
-// 				return { success: true, message: 'User successfully deleted' };
-// 			} catch (error) {
-// 				throw new Error(`Error deleting user: ${error.message}`);
-// 			}
-// 		},
-// 		deleteBlogPost: async (_, { postId }) => {
-// 			try {
-// 				const deletedPost = await BlogPost.findByIdAndDelete(postId);
-
-// 				if (!deletedPost) {
-// 					return { success: false, message: 'Blog post not found' };
-// 				}
-
-// 				return { success: true, message: 'Blog post successfully deleted' };
-// 			} catch (error) {
-// 				console.error('Error deleting blog post:', error);
-// 				throw new Error(`Error deleting blog post: ${error.message}`);
-// 			}
-// 		},
-// 	},
-// 	BlogPost: {
-// 		author: async (parent) => {
-// 			// Populate the author field to include the username
-// 			const blogPost = await BlogPost.findById(parent._id).populate(
-// 				'author',
-// 				'username'
-// 			);
-
-// 			if (!blogPost || !blogPost.author) {
-// 				return null; // Return null or handle the case where author information is not available
-// 			}
-
-// 			return blogPost.author.username;
-// 		},
-// 		comments: async (parent) => {
-// 			return await Comment.find({ blogPost: parent._id });
-// 		},
-// 		// Add other field resolvers as needed
-// 	},
-// 	Comment: {
-// 		user: async (parent) => {
-// 			return await User.findById(parent.user);
-// 		},
-// 		// Add other field resolvers as needed
-// 	},
-// };
-
-// module.exports = resolvers;
