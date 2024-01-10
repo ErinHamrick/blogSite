@@ -48,6 +48,9 @@ const typeDefs = `
     createComment(postId: ID!, content: String!, userId: ID!): Comment
     deleteUser(userId: ID!): DeleteResult
     deleteBlogPost(postId: ID!): DeleteResult
+    updateBlogPost(postId: ID!, title: String, content: String): BlogPost
+    updateComment(commentId: ID!, content: String): Comment
+    deleteComment(commentId: ID!): DeleteResult
     # Add other mutations as needed
   }
 
