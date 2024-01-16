@@ -79,6 +79,8 @@ export const GET_ALL_POSTS = gql`
 `;
 
 // Query to get authenticated user
+
+
 export const GET_AUTHENTICATED_USER = gql`
   query Me {
     me {

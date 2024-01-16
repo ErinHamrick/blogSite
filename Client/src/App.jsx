@@ -8,6 +8,7 @@ import {
 import { setContext } from '@apollo/client/link/context';
 import { Outlet } from 'react-router-dom';
 import './App.css';
+import './utils/auth';
 
 const httpLink = createHttpLink({
 	uri: '/graphql',
@@ -43,3 +44,4 @@ function App() {
 }
 
 export default App;
+ 

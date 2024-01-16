@@ -2,8 +2,8 @@
 
 const { BlogPost, Comment, User } = require('../models');
 const { signToken } = require('../utils/auth');
-const { AuthenticationError } = require('../utils/auth');
-const dayjs = require('dayjs');
+const { AuthenticationError } = require('apollo-server-errors');
+// const dayjs = require('dayjs');
 const jwt = require('jsonwebtoken');
 const { GraphQLError } = require('graphql');
 const { ApolloServerErrorCode } = require('@apollo/server/errors');
@@ -65,34 +65,31 @@ const resolvers = {
 		},
 		getAllPosts: async () => {
 			try {
-				const allPosts = await BlogPost.find();
+				const allPosts = await BlogPost.find()
+					.sort({ createdAt: -1 })
+					.populate('author');
 				return allPosts;
 			} catch (error) {
 				console.error('Error fetching all posts:', error);
 				throw new Error(`Error fetching all posts: ${error.message}`);
 			}
 		},
+
 		me: async (_, args, context) => {
-			try {
-				if (context.user) {
-					const user = await User.findOne({ _id: context.user._id });
-					if (!user) {
-						throw new AuthenticationError('User not found');
-					}
-
-					// Fetch blog posts associated with the authenticated user
-					const blogPosts = await BlogPost.find({
-						author: context.user._id,
-					});
-
-					return {
-						_id: user._id,
-						username: user.username,
-						email: user.email,
-						blogPosts,
-					};
-				}
+			// Check if user is authenticated, if not, throw an error
+			if (!context.user) {
 				throw new AuthenticationError('User not authenticated');
+			}
+
+			try {
+				// Directly use context.user for user details
+				const { _id, username, email } = context.user;
+
+				// Fetch blog posts associated with the authenticated user
+				const blogPosts = await fetchBlogPostsByAuthor(_id);
+
+				// Return user details along with blog posts
+				return { _id, username, email, blogPosts };
 			} catch (error) {
 				console.error(error);
 				throw new Error('Failed to fetch user');
@@ -154,7 +151,7 @@ const resolvers = {
 					title,
 					content,
 					author: user._id,
-					createdAt: dayjs().format(),
+					createdAt: new Date(),
 				});
 				const savedBlogPost = await newBlogPost.save();
 				return savedBlogPost;
@@ -262,6 +259,15 @@ const resolvers = {
 			return await User.findById(parent.user);
 		},
 	},
+};
+
+const fetchBlogPostsByAuthor = async (authorId) => {
+	try {
+		return await BlogPost.find({ author: authorId });
+	} catch (error) {
+		console.error('Error fetching blog posts:', error);
+		throw new Error(`Error fetching blog posts: ${error.message}`);
+	}
 };
 
 module.exports = resolvers;

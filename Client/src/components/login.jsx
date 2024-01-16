@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { LOGIN } from '../utils/mutations'; // Make sure to import your actual mutation
 import { useNavigate } from 'react-router-dom';
+import AuthService from '../utils/auth';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ const Login = () => {
     // Ensure you handle loading and error states appropriately
     onCompleted: (data) => {
       // Handle successful login, e.g., redirect to the user's dashboard
+      const token = data.login.token;
+      AuthService.login(token);
       console.log('Login successful:', data);
       navigate('/blogposts')
     },

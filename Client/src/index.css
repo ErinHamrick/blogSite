@@ -1,16 +1,21 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+:root { 
+  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  background-color: #242424; */
+/* 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -moz-osx-font-smoothing: grayscale;  */
+
+  /* max-width: 1280px; */
+	margin: 0 auto;
+	/* padding: 2rem; */
+	text-align: center;
 }
 
 a {
@@ -28,6 +33,22 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  font-family: 'Exo', sans-serif;
+	font-family: 'Montserrat Alternates', sans-serif;
+	background-color: #496e6f;
+	background-size: cover;
+	font-size: 1.25rem;
+	color: #272c26;
+}
+
+
+header {
+	/* margin-top: -20%; */
+	margin-bottom: 5%;
+}
+
+.site-name {
+  font-family: 'Pangolin', cursive;
 }
 
 h1 {
@@ -65,4 +86,103 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.gradient-text {
+  background: linear-gradient(to bottom, #07324a, #5B0B1F);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: background-position 0.5s ease;
+}
+
+.gradient-text:hover {
+  background-position: 0 100%;
+}
+
+.background-container {
+	display: flex;
+	flex-direction: row;
+}
+
+.container {
+	padding-top: 5%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 300px;
+	height: 400px;
+	border: 3px solid #07324a;
+	border-radius: 5%;
+	box-shadow: 4px 4px 4px 4px #07324a;
+	margin: 10px;
+}
+
+
+form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+label {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 5%;  
+}
+
+.login-label {
+	margin-bottom: 10%;
+}
+
+#login-form {
+	margin-top: 5%;
+}
+
+.login-button {
+	margin-top: 10%;
+	background-color: #c4c0ab;
+}
+
+.signup-button {
+	background-color: #c4c0ab;
+  margin-top: 5%;
+}
+
+input {
+	margin-top: 5px;
+	background-color: #c4c0ab;
+  border-radius: 5px;
+   
+}
+
+.blog-container {
+	padding-top: 4%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;	
+	width: 80%;
+	min-height: 200px;
+	border: 5px solid #07324a;
+	margin: 10%;
+	border-radius: 10px;
+	box-shadow: 4px 4px 4px 4px #07324a;
+}
+
+.post-title {
+	font-size: 1.8rem;
+	margin-bottom: 5%;
+}
+
+.post-content {
+	margin-bottom: 5%;
+}
+
+@media only screen and (max-width: 700px) {
+	.background-container {
+		flex-direction: column;
+	}
+	.login {
+		margin-top: 7%;
+	}
 }
